@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.4'
+      - run: go test ./...
+      - run: go vet ./...
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: darwin
+            goarch: amd64
+            output: flashbackup-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            output: flashbackup-darwin-arm64
+          - goos: linux
+            goarch: amd64
+            output: flashbackup-linux-amd64
+          - goos: linux
+            goarch: arm64
+            output: flashbackup-linux-arm64
+          - goos: windows
+            goarch: amd64
+            output: flashbackup-windows-amd64.exe
+          - goos: windows
+            goarch: arm64
+            output: flashbackup-windows-arm64.exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.4'
+      - run: mkdir -p dist && go build -trimpath -ldflags="-s -w" -o "dist/${{ matrix.output }}" ./src
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: '0'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: dist/${{ matrix.output }}

@@ -1,0 +1,11 @@
+.DS_Store
+*.db
+*.exe
+/flashbackup
+/src/flashbackup
+!dist/
+!dist/*.exe
+docs/midterm/flashbackup
+docs/midterm/mockdata
+docs/midterm/data10/
+docs/midterm/data1000/
